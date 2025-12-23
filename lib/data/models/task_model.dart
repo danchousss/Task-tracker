@@ -1,50 +1,27 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_status.dart';
+import '../../domain/entities/user_entity.dart';
 import 'user_model.dart';
 
-class TaskModel {
-  final String id;
-  final String title;
-  final String description;
-  final TaskStatus status;
-  final String projectId;
-  final UserModel? assignee;
+part 'task_model.freezed.dart';
+part 'task_model.g.dart';
 
-  TaskModel({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.status,
-    required this.projectId,
-    this.assignee,
-  });
+@freezed
+class TaskModel with _$TaskModel {
+  const factory TaskModel({
+    required String id,
+    required String title,
+    required String description,
+    @JsonKey(fromJson: taskStatusFromJson, toJson: taskStatusToJson) required TaskStatus status,
+    required String projectId,
+    UserModel? assignee,
+  }) = _TaskModel;
 
-  factory TaskModel.fromJson(Map<String, dynamic> json) {
-    return TaskModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String? ?? '',
-      status: TaskStatus.values.firstWhere(
-        (e) => e.name == (json['status'] as String).toLowerCase(),
-        orElse: () => TaskStatus.todo,
-      ),
-      projectId: json['projectId'] as String,
-      assignee: json['assignee'] != null
-          ? UserModel.fromJson(json['assignee'] as Map<String, dynamic>)
-          : null,
-    );
-  }
+  factory TaskModel.fromJson(Map<String, dynamic> json) => _$TaskModelFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'status': status.name.toUpperCase(),
-      'projectId': projectId,
-      'assignee': assignee?.toJson(),
-    };
-  }
+  const TaskModel._();
 
   TaskEntity toEntity() => TaskEntity(
         id: id,
@@ -61,8 +38,6 @@ class TaskModel {
         description: entity.description,
         status: entity.status,
         projectId: entity.projectId,
-        assignee: entity.assignee != null
-            ? UserModel.fromEntity(entity.assignee!)
-            : null,
+        assignee: entity.assignee != null ? UserModel.fromEntity(entity.assignee!) : null,
       );
 }

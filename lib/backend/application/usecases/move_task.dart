@@ -5,7 +5,8 @@ import '../../domain/task_status.dart';
 class MoveTaskParams {
   final String taskId;
   final TaskStatus status;
-  MoveTaskParams({required this.taskId, required this.status});
+  final String ownerId;
+  MoveTaskParams({required this.taskId, required this.status, required this.ownerId});
 }
 
 class MoveTaskUseCase {
@@ -13,6 +14,6 @@ class MoveTaskUseCase {
   MoveTaskUseCase(this.repository);
 
   Future<Task> call(MoveTaskParams params) {
-    return repository.move(params.taskId, params.status);
+    return repository.move(params.taskId, params.status, params.ownerId);
   }
 }

@@ -6,13 +6,13 @@ class InMemoryTaskRepository implements TaskRepository {
   final _items = <Task>[];
 
   @override
-  Future<Task> assign(String taskId, String? userId) async {
-    final existing = await findById(taskId);
+  Future<Task> assign(String taskId, String? userId, String ownerId) async {
+    final existing = await findById(taskId, ownerId);
     if (existing == null) {
       throw StateError('Task not found');
     }
     final updated = existing.copyWith(assigneeId: userId);
-    return update(updated);
+    return update(updated, ownerId);
   }
 
   @override
@@ -22,28 +22,29 @@ class InMemoryTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<List<Task>> findAll() async => List.unmodifiable(_items);
+  Future<List<Task>> findAll(String ownerId) async =>
+      List.unmodifiable(_items.where((t) => t.ownerId == ownerId));
 
   @override
-  Future<Task?> findById(String id) async {
+  Future<Task?> findById(String id, String ownerId) async {
     try {
-      return _items.firstWhere((t) => t.id == id);
+      return _items.firstWhere((t) => t.id == id && t.ownerId == ownerId);
     } catch (_) {
       return null;
     }
   }
 
   @override
-  Future<Task> move(String taskId, TaskStatus status) async {
-    final existing = await findById(taskId);
+  Future<Task> move(String taskId, TaskStatus status, String ownerId) async {
+    final existing = await findById(taskId, ownerId);
     if (existing == null) throw StateError('Task not found');
     final updated = existing.copyWith(status: status);
-    return update(updated);
+    return update(updated, ownerId);
   }
 
   @override
-  Future<Task> update(Task task) async {
-    final idx = _items.indexWhere((t) => t.id == task.id);
+  Future<Task> update(Task task, String ownerId) async {
+    final idx = _items.indexWhere((t) => t.id == task.id && t.ownerId == ownerId);
     if (idx == -1) throw StateError('Task not found');
     _items[idx] = task;
     return task;

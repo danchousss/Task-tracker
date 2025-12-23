@@ -7,6 +7,7 @@ class Task {
   final TaskStatus status;
   final String projectId;
   final String? assigneeId;
+  final String ownerId;
 
   const Task({
     required this.id,
@@ -14,6 +15,7 @@ class Task {
     required this.description,
     required this.status,
     required this.projectId,
+    required this.ownerId,
     this.assigneeId,
   });
 
@@ -24,6 +26,7 @@ class Task {
     TaskStatus? status,
     String? projectId,
     String? assigneeId,
+    String? ownerId,
   }) {
     return Task(
       id: id ?? this.id,
@@ -31,6 +34,7 @@ class Task {
       description: description ?? this.description,
       status: status ?? this.status,
       projectId: projectId ?? this.projectId,
+      ownerId: ownerId ?? this.ownerId,
       assigneeId: assigneeId ?? this.assigneeId,
     );
   }

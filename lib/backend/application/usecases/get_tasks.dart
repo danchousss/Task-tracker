@@ -5,5 +5,5 @@ class GetTasksUseCase {
   final TaskRepository repository;
   GetTasksUseCase(this.repository);
 
-  Future<List<Task>> call() => repository.findAll();
+  Future<List<Task>> call(String ownerId) => repository.findAll(ownerId);
 }

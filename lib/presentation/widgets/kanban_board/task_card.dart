@@ -5,13 +5,13 @@ import '../../../domain/entities/task_status.dart';
 
 class TaskCard extends StatelessWidget {
   final TaskEntity task;
-  final void Function(TaskStatus status) onMove;
-  const TaskCard({super.key, required this.task, required this.onMove});
+  final bool isDragging;
+  const TaskCard({super.key, required this.task, this.isDragging = false});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      elevation: isDragging ? 6 : 2,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -27,19 +27,6 @@ class TaskCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: TaskStatus.values
-                  .where((s) => s != task.status)
-                  .map(
-                    (status) => ActionChip(
-                      label: Text(status.name.toUpperCase()),
-                      onPressed: () => onMove(status),
-                    ),
-                  )
-                  .toList(),
             ),
           ],
         ),

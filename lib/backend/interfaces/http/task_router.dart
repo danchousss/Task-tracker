@@ -9,7 +9,9 @@ import '../../application/usecases/get_tasks.dart';
 import '../../application/usecases/move_task.dart';
 import '../../application/usecases/update_task.dart';
 import '../../domain/task.dart';
+import '../../domain/task_status.dart';
 import 'dto/task_dto.dart';
+import 'middleware/auth_middleware.dart';
 
 class TaskRouter {
   final GetTasksUseCase getTasks;
@@ -42,11 +44,15 @@ class TaskRouter {
   }
 
   Future<Response> _handleGetAll(Request req) async {
-    final tasks = await getTasks();
+    final ownerId = req.user?.id;
+    if (ownerId == null) return Response(401, body: jsonEncode({'error': 'unauthorized'}));
+    final tasks = await getTasks(ownerId);
     return Response.ok(jsonEncode(tasks.map(TaskDto.toJson).toList()));
   }
 
   Future<Response> _handleCreate(Request req) async {
+    final ownerId = req.user?.id;
+    if (ownerId == null) return Response(401, body: jsonEncode({'error': 'unauthorized'}));
     final payload = await _readJson(req);
     final title = payload['title'] as String? ?? '';
     final description = payload['description'] as String? ?? '';
@@ -62,6 +68,7 @@ class TaskRouter {
         title: title,
         description: description,
         projectId: projectId,
+        ownerId: ownerId,
         assigneeId: assigneeId,
       ),
     );
@@ -69,8 +76,10 @@ class TaskRouter {
   }
 
   Future<Response> _handleUpdate(Request req, String id) async {
+    final ownerId = req.user?.id;
+    if (ownerId == null) return Response(401, body: jsonEncode({'error': 'unauthorized'}));
     final payload = await _readJson(req);
-    final existing = await _findOr404(id);
+    final existing = await _findOr404(id, ownerId);
     if (existing == null) return Response.notFound(jsonEncode({'error': 'not_found'}));
 
     final updated = existing.copyWith(
@@ -78,16 +87,18 @@ class TaskRouter {
       description: payload['description'] as String? ?? existing.description,
       projectId: payload['projectId'] as String? ?? existing.projectId,
     );
-    final result = await updateTask(updated);
+    final result = await updateTask(updated, ownerId);
     return Response.ok(jsonEncode(TaskDto.toJson(result)));
   }
 
   Future<Response> _handleMove(Request req, String id) async {
+    final ownerId = req.user?.id;
+    if (ownerId == null) return Response(401, body: jsonEncode({'error': 'unauthorized'}));
     final payload = await _readJson(req);
     final statusStr = payload['status'] as String? ?? 'TODO';
     final status = TaskDto.parseStatus(statusStr);
     try {
-      final result = await moveTask(MoveTaskParams(taskId: id, status: status));
+      final result = await moveTask(MoveTaskParams(taskId: id, status: status, ownerId: ownerId));
       return Response.ok(jsonEncode(TaskDto.toJson(result)));
     } catch (_) {
       return Response.notFound(jsonEncode({'error': 'not_found'}));
@@ -95,10 +106,12 @@ class TaskRouter {
   }
 
   Future<Response> _handleAssign(Request req, String id) async {
+    final ownerId = req.user?.id;
+    if (ownerId == null) return Response(401, body: jsonEncode({'error': 'unauthorized'}));
     final payload = await _readJson(req);
     final userId = payload['userId'] as String?;
     try {
-      final result = await assignTask(AssignTaskParams(taskId: id, userId: userId));
+      final result = await assignTask(AssignTaskParams(taskId: id, userId: userId, ownerId: ownerId));
       return Response.ok(jsonEncode(TaskDto.toJson(result)));
     } catch (_) {
       return Response.notFound(jsonEncode({'error': 'not_found'}));
@@ -113,8 +126,8 @@ class TaskRouter {
     return {};
   }
 
-  Future<Task?> _findOr404(String id) async {
-    final tasks = await getTasks();
+  Future<Task?> _findOr404(String id, String ownerId) async {
+    final tasks = await getTasks(ownerId);
     try {
       return tasks.firstWhere((t) => t.id == id);
     } catch (_) {

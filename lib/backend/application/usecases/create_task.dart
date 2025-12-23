@@ -9,11 +9,13 @@ class CreateTaskParams {
   final String description;
   final String projectId;
   final String? assigneeId;
+  final String ownerId;
 
   CreateTaskParams({
     required this.title,
     required this.description,
     required this.projectId,
+    required this.ownerId,
     this.assigneeId,
   });
 }
@@ -29,6 +31,7 @@ class CreateTaskUseCase {
       description: params.description,
       status: TaskStatus.todo,
       projectId: params.projectId,
+      ownerId: params.ownerId,
       assigneeId: params.assigneeId,
     );
     return repository.create(task);

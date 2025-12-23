@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../domain/entities/task_entity.dart';
 import '../../../domain/entities/task_status.dart';
 import 'task_card.dart';
@@ -67,13 +69,65 @@ class ColumnWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          ...tasks.map(
-            (task) => Padding(
-              padding: const EdgeInsets.only(bottom: 10.0),
-              child: TaskCard(
-                task: task,
-                onMove: (newStatus) => onMove(task.id, newStatus),
-              ),
+          Expanded(
+            child: DragTarget<TaskEntity>(
+              onWillAccept: (task) => task != null && task.status != status,
+              onAccept: (task) => onMove(task.id, status),
+              builder: (context, candidateData, rejectedData) {
+                final isActive = candidateData.isNotEmpty;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: isActive ? Colors.white.withOpacity(0.4) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isActive ? Border.all(color: Colors.black26) : null,
+                  ),
+                  child: SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 80),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: tasks.isEmpty
+                            ? [
+                                Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Text(
+                                    isActive ? 'Отпустите здесь' : 'Перетащите карточку сюда',
+                                    style: TextStyle(
+                                      color: Colors.black54,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ]
+                            : tasks
+                                .map(
+                                  (task) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 10.0),
+                                    child: Draggable<TaskEntity>(
+                                      data: task,
+                                      feedback: Material(
+                                        color: Colors.transparent,
+                                        child: SizedBox(
+                                          width: 280,
+                                          child: TaskCard(task: task, isDragging: true),
+                                        ),
+                                      ),
+                                      childWhenDragging: Opacity(
+                                        opacity: 0.35,
+                                        child: TaskCard(task: task),
+                                      ),
+                                      child: TaskCard(task: task),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
