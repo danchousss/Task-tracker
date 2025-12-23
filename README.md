@@ -6,6 +6,9 @@
 **Date:** 21.10.2025
 
 ---
+## dfd presentation link
+https://www.canva.com/design/DAG3Roj1lSc/Cn05G782BbMdoBfXXw7A0w/edit?utm_content=DAG3Roj1lSc&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+---
 
 ## 👥 Team List
 
